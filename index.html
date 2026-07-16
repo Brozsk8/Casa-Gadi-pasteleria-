@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>Gadi Pastelería · Menú AR</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+/* VISOR FULL SCREEN */
+model-viewer{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  --progress-bar-color:rgba(255,255,255,.4);
+  background:radial-gradient(ellipse at center, #2a1f14 0%, #111008 100%);
+}
+
+/* TOP BAR */
+.top{
+  position:fixed;
+  top:0;left:0;right:0;
+  padding:16px 16px 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.85) 0%,transparent 100%);
+  z-index:10;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+}
+
+.price-pill{
+  background:rgba(255,255,255,.18);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:30px;
+  padding:8px 16px;
+  color:white;
+  font-size:20px;
+  font-weight:700;
+  white-space:nowrap;
+  flex-shrink:0;
+  text-shadow:0 1px 4px rgba(0,0,0,.5);
+}
+
+.name-pill{
+  flex:1;
+  background:rgba(255,255,255,.18);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:30px;
+  padding:8px 14px;
+  display:flex;align-items:center;gap:7px;
+  min-width:0;
+}
+.name-pill .dot{width:7px;height:7px;border-radius:50%;background:#FF6B35;flex-shrink:0;animation:pulse 1.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+.name-pill span{
+  color:white;font-size:14px;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-shadow:0 1px 4px rgba(0,0,0,.5);
+}
+
+.cat-pill{
+  background:rgba(255,255,255,.18);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:30px;
+  padding:8px 12px;
+  flex-shrink:0;
+}
+.cat-pill select{
+  background:transparent;border:none;
+  color:white;font-size:13px;cursor:pointer;outline:none;
+  font-weight:500;
+}
+.cat-pill select option{background:#222;color:white;}
+
+/* LOGO BAR */
+.logo-bar{
+  position:fixed;
+  top:80px;left:50%;transform:translateX(-50%);
+  z-index:10;
+}
+.logo-pill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:40px;
+  padding:8px 18px;
+  white-space:nowrap;
+}
+.logo-icon{font-size:18px;}
+.logo-name{
+  font-size:15px;font-weight:600;
+  color:white;letter-spacing:.02em;
+  text-shadow:0 1px 4px rgba(0,0,0,.5);
+}
+.logo-loc{font-size:13px;color:rgba(255,255,255,.5);}
+
+/* STRIP lateral */
+.strip{
+  position:fixed;
+  right:12px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:8px;
+  z-index:10;
+}
+.thumb{
+  width:52px;height:52px;border-radius:14px;
+  background:rgba(255,255,255,.15);
+  border:2px solid transparent;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  backdrop-filter:blur(8px);
+  transition:all .2s;
+}
+.thumb.on{border-color:white;background:rgba(255,255,255,.28);}
+
+/* BOTTOM */
+.bottom{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  padding:16px 20px 40px;
+  background:linear-gradient(to top,rgba(0,0,0,.9) 60%,transparent 100%);
+  z-index:10;
+}
+.desc{
+  font-size:15px;color:rgba(255,255,255,.88);
+  line-height:1.6;text-align:center;
+  margin:0 auto 16px;max-width:320px;
+  text-shadow:0 1px 6px rgba(0,0,0,.6);
+}
+
+/* Botón AR */
+.ar-wrap{
+  display:flex;justify-content:center;
+}
+.ar-cta{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;max-width:300px;
+  padding:15px 24px;
+  background:rgba(255,255,255,.16);
+  border:1.5px solid rgba(255,255,255,.45);
+  border-radius:40px;
+  color:white;font-size:16px;font-weight:500;
+  cursor:pointer;
+  backdrop-filter:blur(14px);
+  transition:background .2s;
+  letter-spacing:.02em;
+}
+.ar-cta:active{background:rgba(255,255,255,.28);}
+.ar-cta svg{width:20px;height:20px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOP -->
+<div class="top">
+  <div class="price-pill" id="price">$8.500</div>
+  <div class="name-pill">
+    <span class="dot"></span>
+    <span id="nom">Croissant de mantequilla</span>
+  </div>
+  <div class="cat-pill">
+    <select onchange="filterCat(this.value)">
+      <option>Todos</option>
+      <option>Croissants</option>
+      <option>Pasteles</option>
+      <option>Postres</option>
+      <option>Bebidas</option>
+    </select>
+  </div>
+</div>
+
+<!-- LOGO -->
+<div class="logo-bar">
+  <div class="logo-pill">
+    <span class="logo-icon">🥐</span>
+    <span class="logo-name">Gadi Pastelería</span>
+    <span class="logo-loc">· Chía</span>
+  </div>
+</div>
+
+<!-- VISOR 3D FULLSCREEN -->
+<model-viewer
+  id="mv"
+  src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+  ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
+  ar
+  ar-modes="webxr scene-viewer quick-look"
+  ar-scale="fixed"
+  ar-placement="floor"
+  camera-controls
+  auto-rotate
+  auto-rotate-delay="0"
+  rotation-per-second="18deg"
+  shadow-intensity="0.8"
+  exposure="1.2">
+
+  <!-- Botón AR nativo del model-viewer — siempre funciona -->
+  <button slot="ar-button" style="
+    position:absolute;bottom:110px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:10px;
+    padding:15px 28px;
+    background:rgba(255,255,255,.16);
+    border:1.5px solid rgba(255,255,255,.45);
+    border-radius:40px;
+    color:white;font-size:16px;font-weight:500;
+    cursor:pointer;
+    backdrop-filter:blur(14px);
+    white-space:nowrap;
+    font-family:-apple-system,sans-serif;
+  ">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M1 6l5-3 6 3 6-3 5 3v12l-5 3-6-3-6 3-5-3z"/>
+      <path d="M7 3v12M13 6v12"/>
+    </svg>
+    Ver en tu espacio
+  </button>
+
+</model-viewer>
+
+<!-- STRIP lateral -->
+<div class="strip" id="strip"></div>
+
+<!-- BOTTOM -->
+<div class="bottom">
+  <p class="desc" id="desc">Pan artesanal con mantequilla francesa. 72h de fermentación. Horneado cada mañana.</p>
+</div>
+
+<script>
+const platos = [
+  {id:'croissant',e:'🥐',cat:'Croissants',nom:'Croissant de mantequilla',desc:'Pan artesanal con mantequilla francesa. 72h de fermentación. Horneado cada mañana.',precio:'$8.500',glb:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',ios:'https://modelviewer.dev/shared-assets/models/Astronaut.usdz'},
+  {id:'tresl',e:'🎂',cat:'Pasteles',nom:'Torta tres leches',desc:'Bizcocho bañado en tres tipos de leche con chantilly artesanal y toque de canela.',precio:'$12.000',glb:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',ios:'https://modelviewer.dev/shared-assets/models/Astronaut.usdz'},
+  {id:'eclair',e:'🍫',cat:'Postres',nom:'Éclair de chocolate',desc:'Masa choux con crema pastelera y ganache de chocolate belga 70%.',precio:'$9.000',glb:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',ios:'https://modelviewer.dev/shared-assets/models/Astronaut.usdz'},
+  {id:'cafe',e:'☕',cat:'Bebidas',nom:'Cappuccino artesanal',desc:'Espresso doble colombiano con leche vaporizada a 65°C. Arte latte incluido.',precio:'$7.500',glb:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',ios:'https://modelviewer.dev/shared-assets/models/Astronaut.usdz'},
+  {id:'macaron',e:'🍬',cat:'Postres',nom:'Macarons franceses',desc:'Docena surtida: frambuesa, pistache, vainilla, chocolate y limón.',precio:'$28.000',glb:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',ios:'https://modelviewer.dev/shared-assets/models/Astronaut.usdz'},
+  {id:'cheese',e:'🍰',cat:'Pasteles',nom:'Cheesecake frutos rojos',desc:'Relleno de Philadelphia con coulis de frutos rojos frescos.',precio:'$13.500',glb:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',ios:'https://modelviewer.dev/shared-assets/models/Astronaut.usdz'},
+];
+
+let cur=0, fil=[...platos];
+
+function pick(i){
+  cur=i;
+  const p=fil[i];
+  document.getElementById('price').textContent=p.precio;
+  document.getElementById('nom').textContent=p.nom;
+  document.getElementById('desc').textContent=p.desc;
+  const mv=document.getElementById('mv');
+  mv.src=p.glb;
+  mv.setAttribute('ios-src',p.ios);
+  document.querySelectorAll('.thumb').forEach((t,j)=>t.classList.toggle('on',j===i));
+}
+
+function filterCat(cat){
+  fil=cat==='Todos'?[...platos]:platos.filter(p=>p.cat===cat);
+  cur=0;
+  renderStrip();
+  pick(0);
+}
+
+function renderStrip(){
+  document.getElementById('strip').innerHTML=fil.map((p,i)=>
+    `<div class="thumb ${i===cur?'on':''}" onclick="pick(${i})">${p.e}</div>`
+  ).join('');
+}
+
+renderStrip();
+pick(0);
+</script>
+</body>
+</html>
